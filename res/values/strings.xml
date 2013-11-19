@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="appName">Epoch Launcher</string>
+	<string name="appDesc">Epoch Launcher is a home screen replacement application for Android, aimed at bringing a Sword Art Online-like graphical user interface to the Android platform.</string>
+	<string name="menuLeftIconInternetDesc">Internet</string>
+	<string name="menuLeftIconContactsDesc">Contacts</string>
+	<string name="menuLeftIconPhoneDesc">Phone</string>
+	<string name="menuLeftIconMessagingDesc">Messaging</string>
+	<string name="menuLeftIconAppsDesc">Applications</string>
+	<string name="menuLeftIconPrefsDesc">Preferences</string>
+</resources>

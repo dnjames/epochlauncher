@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="com.mirasmithy.epochlauncher"
+	android:versionCode="1"
+	android:versionName="1.0"
+	android:installLocation="internalOnly">
+	<uses-sdk
+		android:minSdkVersion="14" 
+		android:targetSdkVersion="19"/>
+	<supports-screens
+		android:smallScreens="false"
+		android:normalScreens="true"
+		android:largeScreens="true"
+		android:xlargeScreens="true"/>
+	<application
+		android:icon="@drawable/app_icon"
+		android:label="@string/appName"
+		android:description="@string/appDesc">
+		<activity
+			android:label="@string/appName"
+			android:name=".MainActivity"
+			android:theme="@style/Theme.Holo.Light.NoActionBar.Wallpaper"
+			android:configChanges="orientation|screenSize"
+			android:launchMode="singleInstance">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN"/>
+				<category android:name="android.intent.category.LAUNCHER"/>
+				<category android:name="android.intent.category.HOME"/>
+				<category android:name="android.intent.category.DEFAULT"/>
+			</intent-filter>
+		</activity>
+		<activity
+			android:name=".FakeLauncher"
+			android:enabled="false">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN"/>
+				<category android:name="android.intent.category.HOME"/>
+				<category android:name="android.intent.category.DEFAULT"/>
+			</intent-filter>
+		</activity>
+	</application>
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+	<uses-permission android:name="android.permission.BLUETOOTH"/>
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+	<uses-permission android:name="android.permission.SET_WALLPAPER_HINTS"/>
+</manifest>
