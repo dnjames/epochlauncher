@@ -15,7 +15,8 @@
 	<application
 		android:icon="@drawable/app_icon"
 		android:label="@string/appName"
-		android:description="@string/appDesc">
+		android:description="@string/appDesc"
+		android:debuggable="false">
 		<activity
 			android:label="@string/appName"
 			android:name=".MainActivity"
