@@ -12,6 +12,7 @@
 	android:paddingBottom="0dp"
 	android:paddingLeft="0dp"
 	android:paddingRight="0dp"
+	android:fitsSystemWindows="true"
 	tools:context=".MainActivity">
 	<LinearLayout
 		android:id="@+id/menuLeft"

@@ -83,6 +83,9 @@ public class MainActivity extends Activity {
 	OnTouchListener menuRightItemOtl;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		if (android.os.Build.VERSION.SDK_INT >= 19) {
+			setTheme(R.style.Theme_Holo_Light_NoActionBar_Wallpaper_TranslucentDecor);
+		}
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.mainactivity);
 
@@ -271,11 +274,11 @@ public class MainActivity extends Activity {
 						}
 						if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
 							setMenuLeftIconColor(view, 0);
-							if ((motionEvent.getEventTime() - motionEvent.getDownTime()) <= 300) {
-								launch("com.android.mms");
+							if (android.os.Build.VERSION.SDK_INT >= 19) {
+								launch("com.google.android.talk");
 							}
 							else {
-								launch("com.google.android.talk");
+								launch("com.android.mms");
 							}
 						}
 						break;

@@ -7,4 +7,11 @@
 		<item name="android:colorBackgroundCacheHint">@null</item>
 		<item name="android:windowShowWallpaper">true</item>
 	</style>
+	<style
+		name="Theme.Holo.Light.NoActionBar.Wallpaper.TranslucentDecor"
+		parent="@style/Theme.Holo.Light.NoActionBar.Wallpaper">
+		<item name="android:windowTranslucentStatus">true</item>
+		<item name="android:windowTranslucentNavigation">true</item>
+		<item name="android:windowContentOverlay">@null</item>
+	</style>
 </resources>
