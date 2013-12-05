@@ -1,10 +1,11 @@
 package com.mirasmithy.epochlauncher;
 
+import java.io.*;
 import java.util.*;
 
-public class Folder {
+public class Folder implements Serializable {
 	private String folderName;
-	private ArrayList<AppInfo> folderContents;
+	private ArrayList<AppInfo> folderContents = new ArrayList<AppInfo>();
 
 	public synchronized void setFolderName(String a) {
 		this.folderName = a;

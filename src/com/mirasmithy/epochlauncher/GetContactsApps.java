@@ -7,8 +7,8 @@ import java.util.*;
 
 public class GetContactsApps implements Runnable {
 	public void run() {
-		GetContactsAppsCommunicator getContactsAppsCommunicator = new GetContactsAppsCommunicator();
-		PackageManager packageManager = getContactsAppsCommunicator.getPackageManager();
+		GetContactsAppsCommunicator gCAC = new GetContactsAppsCommunicator();
+		PackageManager packageManager = gCAC.getPackageManager();
 		ArrayList<AppInfo> contactsApps = new ArrayList<AppInfo>();
 		Intent getContactsAppsIntent = new Intent(Intent.ACTION_VIEW, ContactsContract.Contacts.CONTENT_URI);
 		List<ResolveInfo> getContactsAppsList = packageManager.queryIntentActivities(getContactsAppsIntent, PackageManager.MATCH_DEFAULT_ONLY);
@@ -18,12 +18,12 @@ public class GetContactsApps implements Runnable {
 		}
 		if (contactsApps.size() == 0) {
 			contactsApps.add(new AppInfo());
-			contactsApps.get(0).setAppInfo("No Contacts Applications Installed", "");
+			contactsApps.get(0).setAppInfo("No Contacts Applications Installed", null);
 		}
 		HashSet<AppInfo> a = new HashSet<AppInfo>(contactsApps);
 		contactsApps = new ArrayList<AppInfo>(a);
 		Collections.sort(contactsApps, new AppInfoComparator());
-		getContactsAppsCommunicator.setContactsApps(contactsApps);
-		getContactsAppsCommunicator.setHasFinished(true);
+		gCAC.setContactsApps(contactsApps);
+		gCAC.setHasFinished(true);
 	}
 }

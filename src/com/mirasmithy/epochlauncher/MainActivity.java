@@ -27,6 +27,10 @@ import android.view.View.OnTouchListener;
 public class MainActivity extends Activity {
 	Context context;
 
+	GetPrefsCommunicator gPC;
+	Thread getPrefs;
+	Thread getFolders;
+
 	PackageManager packageManager;
 	boolean hwSupportsWifi;
 	WifiManager wifiManager;
@@ -55,31 +59,31 @@ public class MainActivity extends Activity {
 	ImageView pointerUp;
 	ImageView pointerDown;
 
-	Thread getPrefs;
-	Prefs prefs;
+	ArrayList<Folder> folders;
 
-	int menuLeftHeight;
 	int menuLeftIconHeight;
 	int pointerMenuLeftHeight;
 	boolean dispSupportsPrefsOrientation;
 
+	ArrayList firstLevelList;
+	int lastClickPosition;
+	int lastClickPositionII;
+	ArrayList secondLevelList;
+	Animation fadeIn;
 	int appMode;
-	GetBrowsersCommunicator getBrowsersCommunicator;
+	GetBrowsersCommunicator gBC;
 	Thread getBrowsers;
 	ArrayList<AppInfo> browsers;
-	GetContactsAppsCommunicator getContactsAppsCommunicator;
+	GetContactsAppsCommunicator gCAC;
 	Thread getContactsApps;
 	ArrayList<AppInfo> contactsApps;
-	GetPhoneAppsCommunicator getPhoneAppsCommunicator;
+	GetPhoneAppsCommunicator gPAC;
 	Thread getPhoneApps;
 	ArrayList<AppInfo> phoneApps;
-	GetAppsCommunicator getAppsCommunicator;
+	GetAppsCommunicator gAC;
 	Thread getApps;
 	ArrayList<AppInfo> Apps;
-	Animation fadeIn;
 
-	int lastClickPosition;
-	ArrayList<String> secondLevelList;
 	OnTouchListener menuRightItemOtl;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -91,12 +95,19 @@ public class MainActivity extends Activity {
 
 		context = getApplicationContext();
 
+		gPC = new GetPrefsCommunicator();
+		gPC.setContext(context);
+		getPrefs = new Thread(new GetPrefs());
+		getPrefs.start();
+		GetFoldersCommunicator getFC = new GetFoldersCommunicator();
+		getFC.setContext(context);
+		getFolders = new Thread(new GetFolders());
+		getFolders.start();
+
 		if (Runtime.getRuntime().availableProcessors() == 1) {
-			Toast.makeText(context, "WARNING! Epoch Launcher is meant to run on multi-core devices. Do not expect a buttery experience on single-core devices.", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "WARNING! Epoch Launcher is meant to run on multi-core devices. Do not expect a buttery experience on single-core devices.", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "WARNING! Epoch Launcher is meant to run on multi-core devices. Do not expect a buttery experience on single-core devices.", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "WARNING! Epoch Launcher is meant to run on multi-core devices. Do not expect a buttery experience on single-core devices.", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "WARNING! Epoch Launcher is meant to run on multi-core devices. Do not expect a buttery experience on single-core devices.", Toast.LENGTH_SHORT).show();
+			for (int i = 0; i < 5; i++) {
+				Toast.makeText(context, "WARNING! Epoch Launcher is meant to run on multi-core devices. Do not expect a buttery experience on single-core devices.", Toast.LENGTH_SHORT).show();
+			}
 		}
 		packageManager = getPackageManager();
 		hwSupportsWifi = packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI);
@@ -130,42 +141,26 @@ public class MainActivity extends Activity {
 		pointerUp = (ImageView) findViewById(R.id.pointerUp);
 		pointerDown = (ImageView) findViewById(R.id.pointerDown);
 
-		GetPrefsCommunicator getPrefsCommunicator = new GetPrefsCommunicator();
-		getPrefsCommunicator.setContext(context);
-		getPrefs = new Thread(new GetPrefs());
-		getPrefs.start();
-		while (!getPrefsCommunicator.getHasFinished()) {
+		while (!gPC.getHasFinished() || !getFC.getHasFinished()) {
 		}
-		if (getPrefsCommunicator.getHasCrashed()) {
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
-			clearLauncherDefaults();
-			finish();
+		if (gPC.getHasCrashed() || getFC.getHasCrashed()) {
+			onCrash();
 		}
-		prefs = getPrefsCommunicator.getPrefs();
+		folders = getFC.getFolders();
 
 		ViewTreeObserver parentVto = parent.getViewTreeObserver();
 		parentVto.addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 				@Override
 				public void onGlobalLayout() {
-					menuLeftHeight = menuLeft.getHeight();
 					menuLeftIconHeight = menuLeftIconInternet.getHeight();
 					pointerMenuLeftHeight = pointerMenuLeft.getHeight();
-					if (menuLeftHeight > dispResX || menuLeftHeight > dispResY) {
+					if (((menuLeftIconHeight + (20 * dispDensity)) * 6) > dispResX || ((menuLeftIconHeight + (20 * dispDensity)) * 6) > dispResY) {
 						dispSupportsPrefsOrientation = false;
 						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 					}
 					else {
 						dispSupportsPrefsOrientation = true;
-						switch (prefs.getDispPrefsOrientation()) {
+						switch (gPC.getDispPrefsOrientation()) {
 							case 0:
 								setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 								break;
@@ -195,7 +190,8 @@ public class MainActivity extends Activity {
 		OnTouchListener menuLeftIconOtl = new OnTouchListener() {
 			@Override
 			public boolean onTouch(View view, MotionEvent motionEvent) {
-				switch (((Integer) view.getTag()).intValue()) {
+				int position = ((Integer) view.getTag()).intValue();
+				switch (position) {
 					case 1:
 						if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
 							setMenuLeftIconColor(view, 1);
@@ -235,7 +231,7 @@ public class MainActivity extends Activity {
 										startActivity(new Intent(Intent.ACTION_VIEW, ContactsContract.Contacts.CONTENT_URI));
 									}
 									catch (Exception e) {
-										Toast.makeText(context, "No Contacts Applications Installed", Toast.LENGTH_SHORT).show();
+										Toast.makeText(context, "No Contacts Application Installed", Toast.LENGTH_SHORT).show();
 									}
 								}
 								else {
@@ -259,7 +255,7 @@ public class MainActivity extends Activity {
 										startActivity(new Intent(Intent.ACTION_DIAL, null));
 									}
 									catch (Exception e) {
-										Toast.makeText(context, "No Phone Applications Installed", Toast.LENGTH_SHORT).show();
+										Toast.makeText(context, "No Phone Application Installed", Toast.LENGTH_SHORT).show();
 									}
 								}
 								else {
@@ -314,6 +310,7 @@ public class MainActivity extends Activity {
 									setAppMode(6);
 								}
 								else {
+									setMenuLeftIconColor(view, 0);
 									launch("com.android.settings");
 								}
 							}
@@ -333,211 +330,408 @@ public class MainActivity extends Activity {
 		menuRight.setOnScrollListener(new OnScrollListener()
 			{
 				public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-					if (firstVisibleItem == 0 && firstVisibleItem + visibleItemCount != totalItemCount) {
-						pointerUp.setColorFilter(Color.argb(0, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
-						pointerDown.setColorFilter(prefs.getPointerUpDownColor(), PorterDuff.Mode.MULTIPLY);
+					if (firstVisibleItem == 0 && (firstVisibleItem + visibleItemCount) != totalItemCount) {
+						pointerUp.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
+						pointerDown.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
 					}
-					if (firstVisibleItem != 0 && firstVisibleItem + visibleItemCount != totalItemCount) {
-						pointerUp.setColorFilter(prefs.getPointerUpDownColor(), PorterDuff.Mode.MULTIPLY);
-						pointerDown.setColorFilter(prefs.getPointerUpDownColor(), PorterDuff.Mode.MULTIPLY);
+					if (firstVisibleItem != 0 && (firstVisibleItem + visibleItemCount) != totalItemCount) {
+						pointerUp.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
+						pointerDown.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
 					}
-					if (firstVisibleItem != 0 && firstVisibleItem + visibleItemCount == totalItemCount) {
-						pointerUp.setColorFilter(prefs.getPointerUpDownColor(), PorterDuff.Mode.MULTIPLY);
-						pointerDown.setColorFilter(Color.argb(0, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
+					if (firstVisibleItem != 0 && (firstVisibleItem + visibleItemCount) == totalItemCount) {
+						pointerUp.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
+						pointerDown.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
 					}
-					if (firstVisibleItem == 0 && firstVisibleItem + visibleItemCount == totalItemCount) {
-						pointerUp.setColorFilter(Color.argb(0, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
-						pointerDown.setColorFilter(Color.argb(0, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
+					if (firstVisibleItem == 0 && (firstVisibleItem + visibleItemCount) == totalItemCount) {
+						pointerUp.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
+						pointerDown.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("pointerUpDownColor")), PorterDuff.Mode.MULTIPLY);
 					}
 				}
 				public void onScrollStateChanged(AbsListView view, int scrollState) {
 				}
 			});
-
 		menuRightItemOtl = new OnTouchListener() {
 			@Override
 			public boolean onTouch(View view, MotionEvent motionEvent) {
+				int position = ((Integer) view.getTag()).intValue();
 				if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-					setMenuRightItemColor(view, 1);
+					switch (appMode) {
+						case 1:
+						case 2:
+						case 3:
+							if ((appMode == 1 && gBC.getBrowsers().get(position).getPackageName() == null) ||
+								(appMode == 2 && gCAC.getContactsApps().get(position).getPackageName() == null) ||
+								(appMode == 3 && gPAC.getPhoneApps().get(position).getPackageName() == null)) {
+								setMenuRightItemColor(view, 1, false);
+							}
+							else {
+								setMenuRightItemColor(view, 1, true);
+							}
+							break;
+						case 5:
+							setMenuRightItemColor(view, 1, firstLevelList.get(position).getClass() == AppInfo.class);
+							break;
+						case 52:
+							setMenuRightItemColor(view, 1, true);
+							break;
+						case 6:
+							if (position != 1 && position != 2 && position != 3) {
+								setMenuRightItemColor(view, 1, false);
+							}
+							break;
+						case 64:
+							if (position != 0) {
+								setMenuRightItemColor(view, 1, false);
+							}
+							break;
+						default:
+							setMenuRightItemColor(view, 1, false);
+							break;
+					}
 				}
 				if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
-					if (appMode == 6 && (((Integer) view.getTag()).intValue() == 2 || ((Integer) view.getTag()).intValue() == 3 || ((Integer) view.getTag()).intValue() == 4)) {
-					}
-					else {
-						setMenuRightItemColor(view, 0);
+					switch (appMode) {
+						case 1:
+						case 2:
+						case 3:
+							if ((appMode == 1 && gBC.getBrowsers().get(position).getPackageName() == null) ||
+								(appMode == 2 && gCAC.getContactsApps().get(position).getPackageName() == null) ||
+								(appMode == 3 && gPAC.getPhoneApps().get(position).getPackageName() == null)) {
+								setMenuRightItemColor(view, 0, false);
+							}
+							else {
+								setMenuRightItemColor(view, 0, true);
+							}
+							break;
+						case 5:
+							setMenuRightItemColor(view, 0, firstLevelList.get(position).getClass() == AppInfo.class);
+							break;
+						case 52:
+							setMenuRightItemColor(view, 0, true);
+							break;
+						case 6:
+							if (position != 1 && position != 2 && position != 3) {
+								setMenuRightItemColor(view, 0, false);
+							}
+							break;
+						case 64:
+							if (position != 0) {
+								setMenuRightItemColor(view, 0, false);
+							}
+							break;
+						default:
+							setMenuRightItemColor(view, 0, false);
+							break;
 					}
 				}
 				if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
 					switch (appMode) {
 						case 1:
-							if (getBrowsersCommunicator.getBrowsers().get(((Integer) view.getTag()).intValue()).getPackageName() == "") {
+							if (gBC.getBrowsers().get(position).getPackageName() == null) {
+								setMenuRightItemColor(view, 0, false);
 								setAppMode(0);
 							}
 							else {
 								if ((motionEvent.getEventTime() - motionEvent.getDownTime()) <= 300) {
-									launch(getBrowsersCommunicator.getBrowsers().get(((Integer) view.getTag()).intValue()).getPackageName());
+									setMenuRightItemColor(view, 0, true);
+									launch(gBC.getBrowsers().get(position).getPackageName());
 								}
 								else {
-									lastClickPosition = ((Integer) view.getTag()).intValue();
+									lastClickPosition = position;
 									setAppMode(11);
 								}
 							}
 							break;
 						case 11:
-							if (((Integer) view.getTag()).intValue() == 0) {
-								launch(getBrowsersCommunicator.getBrowsers().get(lastClickPosition).getPackageName());
+							if (position == 0) {
+								setMenuRightItemColor(view, 0, false);
+								launch(gBC.getBrowsers().get(lastClickPosition).getPackageName());
 							}
 							else {
-								uninstall(getBrowsersCommunicator.getBrowsers().get(lastClickPosition).getPackageName());
+								setMenuRightItemColor(view, 0, false);
+								uninstall(gBC.getBrowsers().get(lastClickPosition).getPackageName());
 							}
 							break;
 						case 2:
-							if (getContactsAppsCommunicator.getContactsApps().get(((Integer) view.getTag()).intValue()).getPackageName() == "") {
+							if (gCAC.getContactsApps().get(position).getPackageName() == null) {
+								setMenuRightItemColor(view, 0, false);
 								setAppMode(0);
 							}
 							else {
 								if ((motionEvent.getEventTime() - motionEvent.getDownTime()) <= 300) {
-									launch(getContactsAppsCommunicator.getContactsApps().get(((Integer) view.getTag()).intValue()).getPackageName());
+									setMenuRightItemColor(view, 0, true);
+									launch(gCAC.getContactsApps().get(position).getPackageName());
 								}
 								else {
-									lastClickPosition = ((Integer) view.getTag()).intValue();
+									lastClickPosition = position;
 									setAppMode(21);
 								}
 							}
 							break;
 						case 21:
-							if (((Integer) view.getTag()).intValue() == 0) {
-								launch(getContactsAppsCommunicator.getContactsApps().get(lastClickPosition).getPackageName());
+							if (position == 0) {
+								setMenuRightItemColor(view, 0, false);
+								launch(gCAC.getContactsApps().get(lastClickPosition).getPackageName());
 							}
 							else {
-								uninstall(getContactsAppsCommunicator.getContactsApps().get(lastClickPosition).getPackageName());
+								setMenuRightItemColor(view, 0, false);
+								uninstall(gCAC.getContactsApps().get(lastClickPosition).getPackageName());
 							}
 							break;
 						case 3:
-							if (getPhoneAppsCommunicator.getPhoneApps().get(((Integer) view.getTag()).intValue()).getPackageName() == "") {
+							if (gPAC.getPhoneApps().get(position).getPackageName() == null) {
+								setMenuRightItemColor(view, 0, false);
 								setAppMode(0);
 							}
 							else {
 								if ((motionEvent.getEventTime() - motionEvent.getDownTime()) <= 300) {
-									launch(getPhoneAppsCommunicator.getPhoneApps().get(((Integer) view.getTag()).intValue()).getPackageName());
+									setMenuRightItemColor(view, 0, true);
+									launch(gPAC.getPhoneApps().get(position).getPackageName());
 								}
 								else {
-									lastClickPosition = ((Integer) view.getTag()).intValue();
+									lastClickPosition = position;
 									setAppMode(31);
 								}
 							}
 							break;
 						case 31:
-							if (((Integer) view.getTag()).intValue() == 0) {
-								launch(getPhoneAppsCommunicator.getPhoneApps().get(lastClickPosition).getPackageName());
+							if (position == 0) {
+								setMenuRightItemColor(view, 0, false);
+								launch(gPAC.getPhoneApps().get(lastClickPosition).getPackageName());
 							}
 							else {
-								uninstall(getPhoneAppsCommunicator.getPhoneApps().get(lastClickPosition).getPackageName());
+								setMenuRightItemColor(view, 0, false);
+								uninstall(gPAC.getPhoneApps().get(lastClickPosition).getPackageName());
 							}
 							break;
 						case 5:
 							if ((motionEvent.getEventTime() - motionEvent.getDownTime()) <= 300) {
-								launch(getAppsCommunicator.getApps().get(((Integer) view.getTag()).intValue()).getPackageName());
+								if (firstLevelList.get(position).getClass() == AppInfo.class) {
+									setMenuRightItemColor(view, 0, true);
+									launch(((AppInfo) firstLevelList.get(position)).getPackageName());
+								}
+								else {
+									lastClickPosition = position;
+									setAppMode(52);
+								}
 							}
 							else {
-								lastClickPosition = ((Integer) view.getTag()).intValue();
-								setAppMode(51);
+								lastClickPosition = position;
+								if (firstLevelList.get(position).getClass() == AppInfo.class) {
+									setAppMode(51);
+								}
+								else {
+									setAppMode(53);
+								}
 							}
 							break;
 						case 51:
-							switch (((Integer) view.getTag()).intValue()) {
+							switch (position) {
 								case 0:
-									launch(getAppsCommunicator.getApps().get(lastClickPosition).getPackageName());
+									setMenuRightItemColor(view, 0, false);
+									launch(((AppInfo) firstLevelList.get(lastClickPosition)).getPackageName());
 									break;
 								case 1:
-									uninstall(getAppsCommunicator.getApps().get(lastClickPosition).getPackageName());
+									setMenuRightItemColor(view, 0, false);
+									uninstall(((AppInfo) firstLevelList.get(lastClickPosition)).getPackageName());
+									break;
+								case 2:
+									setAppMode(511);
+									break;
+								default:
+									folders.get(position - 3).getFolderContents().add(((AppInfo) firstLevelList.get(lastClickPosition)));
+									Collections.sort(folders.get(position - 3).getFolderContents(), new AppInfoComparator());
+									saveFolders();
+									setAppMode(5);
+									break;
+							}
+							break;
+						case 511:
+							switch (position) {
+								case 0:
+									setMenuRightItemColor(view, 0, false);
+									break;
+								case 1:
+									folders.add(new Folder());
+									folders.get(folders.size() - 1).setFolderName(((EditText) ((RelativeLayout) menuRight.getChildAt(0)).getChildAt(2)).getText().toString());
+									folders.get(folders.size() - 1).getFolderContents().add(((AppInfo) firstLevelList.get(lastClickPosition)));
+									saveFolders();
+									setAppMode(5);
+									break;
+								case 2:
+									setAppMode(51);
+									break;
+							}
+							break;
+						case 52:
+							if ((motionEvent.getEventTime() - motionEvent.getDownTime()) <= 300) {
+								setMenuRightItemColor(view, 0, true);
+								launch(folders.get(lastClickPosition).getFolderContents().get(position).getPackageName());
+							}
+							else {
+								lastClickPositionII = position;
+								setAppMode(521);
+							}
+							break;
+						case 521:
+							switch (position) {
+								case 0:
+									setMenuRightItemColor(view, 0, false);
+									launch(folders.get(lastClickPosition).getFolderContents().get(lastClickPositionII).getPackageName());
+									break;
+								case 1:
+									setMenuRightItemColor(view, 0, false);
+									uninstall(folders.get(lastClickPosition).getFolderContents().get(lastClickPositionII).getPackageName());
+									break;
+								case 2:
+									folders.get(lastClickPosition).getFolderContents().remove(lastClickPositionII);
+									if (folders.get(lastClickPosition).getFolderContents().isEmpty()) {
+										folders.remove(lastClickPosition);
+										saveFolders();
+										setAppMode(5);
+									}
+									else {
+										saveFolders();
+										setAppMode(52);
+									}
+									break;
+							}
+							break;
+						case 53:
+							switch (position) {
+								case 0:
+									setAppMode(531);
+									break;
+								case 1:
+									folders.remove(lastClickPosition);
+									saveFolders();
+									setAppMode(5);
+									break;
+							}
+							break;
+						case 531:
+							switch (position) {
+								case 0:
+									setMenuRightItemColor(view, 0, false);
+									break;
+								case 1:
+									folders.get(lastClickPosition).setFolderName(((EditText) ((RelativeLayout) menuRight.getChildAt(0)).getChildAt(2)).getText().toString());
+									saveFolders();
+									setAppMode(5);
+									break;
+								case 2:
+									setAppMode(53);
 									break;
 							}
 							break;
 						case 6:
-							switch (((Integer) view.getTag()).intValue()) {
+							switch (position) {
 								case 0:
-									setMenuRightItemColor(view, 0);
-									break;
-								case 1:
 									setAppMode(61);
 									break;
-								case 2:
+								case 1:
 									if (hwSupportsWifi) {
-										if (wifiManager.isWifiEnabled()) {
-											wifiManager.setWifiEnabled(false);
-											setMenuRightItemColor(view, 0);
+										setMenuRightItemColor(view, boolean2int(!wifiManager.isWifiEnabled()), false);
+										wifiManager.setWifiEnabled(!wifiManager.isWifiEnabled());
+									}
+									break;
+								case 2:
+									if (hwSupportsBt) {
+										setMenuRightItemColor(view, boolean2int(!btAdapter.isEnabled()), false);
+										if (btAdapter.isEnabled()) {
+											btAdapter.disable();
 										}
 										else {
-											wifiManager.setWifiEnabled(true);
-											setMenuRightItemColor(view, 1);
+											btAdapter.enable();
 										}
 									}
 									break;
 								case 3:
-									if (hwSupportsBt) {
-										if (btAdapter.isEnabled()) {
-											btAdapter.disable();
-											setMenuRightItemColor(view, 0);
-										}
-										else {
-											btAdapter.enable();
-											setMenuRightItemColor(view, 1);
-										}
-									}
-									break;
-								case 4:
 									if (hwSupportsGps) {
 										startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
 									}
 									break;
-								case 5:
+								case 4:
 									if (dispSupportsPrefsOrientation) {
 										setAppMode(62);
 									}
 									else {
-										setMenuRightItemColor(view, 0);
+										setMenuRightItemColor(view, 0, false);
 									}
 									break;
-								case 6:
+								case 5:
 									setAppMode(63);
+									break;
+								case 6:
+									setAppMode(64);
 									break;
 								case 7:
 									restartApp();
 									break;
 								case 8:
+									setMenuRightItemColor(view, 0, false);
 									clearLauncherDefaults();
 									break;
 							}
 							break;
 						case 61:
-							switch (((Integer) view.getTag()).intValue()) {
+							switch (position) {
 								case 0:
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://github.com/mirasmithy/epochlauncher")));
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.gnu.org/licenses/gpl-3.0.html")));
+									setMenuRightItemColor(view, 0, false);
+									try {
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://github.com/mirasmithy/epochlauncher")));
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.gnu.org/licenses/gpl-3.0.html")));
+									}
+									catch (Exception e) {
+										Toast.makeText(context, "No Browsers Installed", Toast.LENGTH_SHORT).show();
+									}
 									break;
 								case 1:
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://developer.android.com/design/downloads/index.html")));
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://creativecommons.org/licenses/by/2.5/legalcode")));
+									setMenuRightItemColor(view, 0, false);
+									try {
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://developer.android.com/design/downloads/index.html")));
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://creativecommons.org/licenses/by/2.5/legalcode")));
+									}
+									catch (Exception e) {
+										Toast.makeText(context, "No Browsers Installed", Toast.LENGTH_SHORT).show();
+									}
 									break;
 								case 2:
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://tenbytwenty.com/?xxxx_posts=akashi")));
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web")));
+									setMenuRightItemColor(view, 0, false);
+									try {
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://tenbytwenty.com/?xxxx_posts=akashi")));
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web")));
+									}
+									catch (Exception e) {
+										Toast.makeText(context, "No Browsers Installed", Toast.LENGTH_SHORT).show();
+									}
 									break;
 								case 3:
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://developer.android.com/design/downloads/index.html")));
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.apache.org/licenses/LICENSE-2.0")));
+									setMenuRightItemColor(view, 0, false);
+									try {
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://developer.android.com/design/downloads/index.html")));
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.apache.org/licenses/LICENSE-2.0")));
+									}
+									catch (Exception e) {
+										Toast.makeText(context, "No Browsers Installed", Toast.LENGTH_SHORT).show();
+									}
 									break;
 								case 4:
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://developer.android.com/tools/support-library/index.html")));
-									startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.apache.org/licenses/LICENSE-2.0")));
+									setMenuRightItemColor(view, 0, false);
+									try {
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://developer.android.com/tools/support-library/index.html")));
+										startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.apache.org/licenses/LICENSE-2.0")));
+									}
+									catch (Exception e) {
+										Toast.makeText(context, "No Browsers Installed", Toast.LENGTH_SHORT).show();
+									}
 									break;
 							}
 							break;
 						case 62:
-							prefs.setDispPrefsOrientation(((Integer) view.getTag()).intValue());
-							setPrefs();
-							switch (prefs.getDispPrefsOrientation()) {
+							gPC.setDispPrefsOrientation(position);
+							savePrefs();
+							switch (gPC.getDispPrefsOrientation()) {
 								case 0:
 									setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 									break;
@@ -551,9 +745,29 @@ public class MainActivity extends Activity {
 							setAppMode(6);
 							break;
 						case 63:
-							prefs.setAppTheme(((Integer) view.getTag()).intValue());
-							setPrefs();
+							gPC.setAppTheme(position);
+							savePrefs();
 							setAppMode(6);
+							break;
+						case 64:
+							switch (position) {
+								case 0:
+									gPC.setUseCustomFont(!gPC.getUseCustomFont());
+									savePrefs();
+									setMenuRightItemColor(view, boolean2int(gPC.getUseCustomFont()), false);
+									break;
+								case 1:
+									setMenuRightItemColor(view, 0, false);
+									break;
+								case 2:
+									gPC.setCustomFont(((EditText) ((RelativeLayout) menuRight.getChildAt(1)).getChildAt(2)).getText().toString());
+									savePrefs();
+									setAppMode(6);
+									break;
+								case 3:
+									setAppMode(6);
+									break;
+							}
 							break;
 					}
 				}
@@ -567,6 +781,15 @@ public class MainActivity extends Activity {
 		separatorMenuLeftRight.startAnimation(fadeIn);
 		separatorMenuLeftRightII.startAnimation(fadeIn);
 		menuRight.startAnimation(fadeIn);
+	}
+
+	public int boolean2int(boolean input) {
+		if (input) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
 	}
 
 	public void clearLauncherDefaults() {
@@ -586,12 +809,23 @@ public class MainActivity extends Activity {
 		dispDensity = dispMetrics.density;
 	}
 
-	public void inflateMenuRight(int layout, ArrayList data) {
-		menuRight.setAdapter(new CustomArrayAdapter(this, layout, data,
-													appMode, prefs, packageManager,
-													hwSupportsWifi, wifiManager, hwSupportsBt,
-													btAdapter, hwSupportsGps, locationManager,
+	public void inflateMenuRight(ArrayList data) {
+		menuRight.setAdapter(new CustomArrayAdapter(this, android.R.layout.simple_list_item_1, data,
+													packageManager,
+													hwSupportsWifi, wifiManager,
+													hwSupportsBt, btAdapter,
+													hwSupportsGps, locationManager,
+													appMode,
 													menuRightItemOtl));
+	}
+
+	public boolean int2boolean(int input) {
+		if (input == 0) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 
 	public void launch(String packageName) {
@@ -599,16 +833,32 @@ public class MainActivity extends Activity {
 			startActivity(getPackageManager().getLaunchIntentForPackage(packageName));
 		}
 		catch (Exception e) {
-			if (packageName == "com.android.mms") {
-				Toast.makeText(context, "Messaging Not Installed", Toast.LENGTH_SHORT).show();
-			}
-			if (packageName == "com.google.android.talk") {
-				Toast.makeText(context, "Hangouts Not Installed", Toast.LENGTH_SHORT).show();
-			}
-			if (packageName == "com.android.vending") {
-				Toast.makeText(context, "Play Store Not Installed", Toast.LENGTH_SHORT).show();
+			switch (packageName) {
+				case "com.android.mms":
+					Toast.makeText(context, "Messaging Not Installed", Toast.LENGTH_SHORT).show();
+					break;
+				case "com.google.android.talk":
+					Toast.makeText(context, "Hangouts Not Installed", Toast.LENGTH_SHORT).show();
+					break;
+				case "com.android.vending":
+					Toast.makeText(context, "Play Store Not Installed", Toast.LENGTH_SHORT).show();
+					break;
+				case "com.android.setting":
+					Toast.makeText(context, "Settings Not Installed", Toast.LENGTH_SHORT).show();
+					break;
+				default:
+					Toast.makeText(context, "App Not Installed", Toast.LENGTH_SHORT).show();
+					break;
 			}
 		}
+	}
+
+	public void onCrash() {
+		for (int i = 0; i < 10; i++) {
+			Toast.makeText(context, "ERROR! Epoch Launcher has crashed. This can be caused by a lack of internal storage space. Try to free up some space and relaunch Epoch Launcher. If the problem persists, contact the developer at mirasmithy@maskr.me", Toast.LENGTH_SHORT).show();
+		}
+		clearLauncherDefaults();
+		finish();
 	}
 
 	public void restartApp() {
@@ -616,22 +866,23 @@ public class MainActivity extends Activity {
 		launch("com.mirasmithy.epochlauncher");
 	}
 
-	public void setPrefs() {
+	public void saveFolders() {
+		Collections.sort(folders, new FolderComparator());
 		try {
-			FileOutputStream setPrefsFos = context.getApplicationContext().openFileOutput("prefs", context.MODE_PRIVATE);
-			ObjectOutputStream setPrefsOos = new ObjectOutputStream(setPrefsFos);
-			setPrefsOos.writeObject(prefs);
-			setPrefsOos.close();
-			setPrefsFos.close();
+			FileOutputStream getFoldersFos = context.getApplicationContext().openFileOutput("folders", context.MODE_PRIVATE);
+			ObjectOutputStream getFoldersOos = new ObjectOutputStream(getFoldersFos);
+			getFoldersOos.writeObject(folders);
+			getFoldersOos.close();
+			getFoldersFos.close();
 		}
 		catch (Exception e) {
+			onCrash();
 		}
 	}
 
 	public void setAppMode(int a) {
 		appMode = a;
 		setMenuLeftPointerMenuLeftLayoutParams();
-		setPointerMenuLeftLayoutParams();
 		switch (appMode) {
 			case 0:
 				setMenuLeftIconColor(menuLeftIconInternet, 0);
@@ -640,14 +891,14 @@ public class MainActivity extends Activity {
 				setMenuLeftIconColor(menuLeftIconMessaging, 0);
 				setMenuLeftIconColor(menuLeftIconApps, 0);
 				setMenuLeftIconColor(menuLeftIconPrefs, 0);
-				pointerMenuLeft.setColorFilter(Color.argb(0, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
-				separatorMenuLeftRight.setBackgroundColor(Color.argb(0, 255, 255, 255));
-				separatorMenuLeftRightII.setBackgroundColor(Color.argb(0, 255, 255, 255));
-				inflateMenuRight(R.layout.menu_right_item, new ArrayList<AppInfo>());
+				pointerMenuLeft.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("pointerMenuLeftColor")), PorterDuff.Mode.MULTIPLY);
+				separatorMenuLeftRight.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("separatorMenuLeftRightColor")));
+				separatorMenuLeftRightII.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(0).get(TAL("separatorMenuLeftRightColor")));
+				inflateMenuRight(new ArrayList());
 				break;
 			case 1:
-				getBrowsersCommunicator = new GetBrowsersCommunicator();
-				getBrowsersCommunicator.setPackageManager(packageManager);
+				gBC = new GetBrowsersCommunicator();
+				gBC.setPackageManager(packageManager);
 				getBrowsers = new Thread(new GetBrowsers());
 				getBrowsers.start();
 				setMenuLeftIconColor(menuLeftIconInternet, 1);
@@ -656,24 +907,24 @@ public class MainActivity extends Activity {
 				setMenuLeftIconColor(menuLeftIconMessaging, 0);
 				setMenuLeftIconColor(menuLeftIconApps, 0);
 				setMenuLeftIconColor(menuLeftIconPrefs, 0);
-				pointerMenuLeft.setColorFilter(prefs.getPointerMenuLeftColor(), PorterDuff.Mode.MULTIPLY);
-				separatorMenuLeftRight.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				separatorMenuLeftRightII.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				while (!getBrowsersCommunicator.getHasFinished()) {
+				pointerMenuLeft.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerMenuLeftColor")), PorterDuff.Mode.MULTIPLY);
+				separatorMenuLeftRight.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				separatorMenuLeftRightII.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				while (!gBC.getHasFinished()) {
 				}
-				inflateMenuRight(R.layout.menu_right_item, getBrowsersCommunicator.getBrowsers());
+				inflateMenuRight(gBC.getBrowsers());
 				animateMainElements();
 				break;
 			case 11:
 				secondLevelList = new ArrayList<String>();
-				secondLevelList.add("Launch " + getBrowsersCommunicator.getBrowsers().get(lastClickPosition).getAppName());
-				secondLevelList.add("Uninstall " + getBrowsersCommunicator.getBrowsers().get(lastClickPosition).getAppName());
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				secondLevelList.add("Launch " + gBC.getBrowsers().get(lastClickPosition).getAppName());
+				secondLevelList.add("Uninstall " + gBC.getBrowsers().get(lastClickPosition).getAppName());
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 			case 2:
-				getContactsAppsCommunicator = new GetContactsAppsCommunicator();
-				getContactsAppsCommunicator.setPackageManager(packageManager);
+				gCAC = new GetContactsAppsCommunicator();
+				gCAC.setPackageManager(packageManager);
 				getContactsApps = new Thread(new GetContactsApps());
 				getContactsApps.start();
 				setMenuLeftIconColor(menuLeftIconInternet, 0);
@@ -682,24 +933,24 @@ public class MainActivity extends Activity {
 				setMenuLeftIconColor(menuLeftIconMessaging, 0);
 				setMenuLeftIconColor(menuLeftIconApps, 0);
 				setMenuLeftIconColor(menuLeftIconPrefs, 0);
-				pointerMenuLeft.setColorFilter(prefs.getPointerMenuLeftColor(), PorterDuff.Mode.MULTIPLY);
-				separatorMenuLeftRight.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				separatorMenuLeftRightII.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				while (!getContactsAppsCommunicator.getHasFinished()) {
+				pointerMenuLeft.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerMenuLeftColor")), PorterDuff.Mode.MULTIPLY);
+				separatorMenuLeftRight.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				separatorMenuLeftRightII.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				while (!gCAC.getHasFinished()) {
 				}
-				inflateMenuRight(R.layout.menu_right_item, getContactsAppsCommunicator.getContactsApps());
+				inflateMenuRight(gCAC.getContactsApps());
 				animateMainElements();
 				break;
 			case 21:
 				secondLevelList = new ArrayList<String>();
-				secondLevelList.add("Launch " + getContactsAppsCommunicator.getContactsApps().get(lastClickPosition).getAppName());
-				secondLevelList.add("Uninstall " + getContactsAppsCommunicator.getContactsApps().get(lastClickPosition).getAppName());
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				secondLevelList.add("Launch " + gCAC.getContactsApps().get(lastClickPosition).getAppName());
+				secondLevelList.add("Uninstall " + gCAC.getContactsApps().get(lastClickPosition).getAppName());
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 			case 3:
-				getPhoneAppsCommunicator = new GetPhoneAppsCommunicator();
-				getPhoneAppsCommunicator.setPackageManager(packageManager);
+				gPAC = new GetPhoneAppsCommunicator();
+				gPAC.setPackageManager(packageManager);
 				getPhoneApps = new Thread(new GetPhoneApps());
 				getPhoneApps.start();
 				setMenuLeftIconColor(menuLeftIconInternet, 0);
@@ -708,24 +959,24 @@ public class MainActivity extends Activity {
 				setMenuLeftIconColor(menuLeftIconMessaging, 0);
 				setMenuLeftIconColor(menuLeftIconApps, 0);
 				setMenuLeftIconColor(menuLeftIconPrefs, 0);
-				pointerMenuLeft.setColorFilter(prefs.getPointerMenuLeftColor(), PorterDuff.Mode.MULTIPLY);
-				separatorMenuLeftRight.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				separatorMenuLeftRightII.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				while (!getPhoneAppsCommunicator.getHasFinished()) {
+				pointerMenuLeft.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerMenuLeftColor")), PorterDuff.Mode.MULTIPLY);
+				separatorMenuLeftRight.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				separatorMenuLeftRightII.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				while (!gPAC.getHasFinished()) {
 				}
-				inflateMenuRight(R.layout.menu_right_item, getPhoneAppsCommunicator.getPhoneApps());
+				inflateMenuRight(gPAC.getPhoneApps());
 				animateMainElements();
 				break;
 			case 31:
 				secondLevelList = new ArrayList<String>();
-				secondLevelList.add("Launch " + getPhoneAppsCommunicator.getPhoneApps().get(lastClickPosition).getAppName());
-				secondLevelList.add("Uninstall " + getPhoneAppsCommunicator.getPhoneApps().get(lastClickPosition).getAppName());
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				secondLevelList.add("Launch " + gPAC.getPhoneApps().get(lastClickPosition).getAppName());
+				secondLevelList.add("Uninstall " + gPAC.getPhoneApps().get(lastClickPosition).getAppName());
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 			case 5:
-				getAppsCommunicator = new GetAppsCommunicator();
-				getAppsCommunicator.setPackageManager(packageManager);
+				gAC = new GetAppsCommunicator();
+				gAC.setPackageManager(packageManager);
 				getApps = new Thread(new GetApps());
 				getApps.start();
 				setMenuLeftIconColor(menuLeftIconInternet, 0);
@@ -734,19 +985,70 @@ public class MainActivity extends Activity {
 				setMenuLeftIconColor(menuLeftIconMessaging, 0);
 				setMenuLeftIconColor(menuLeftIconApps, 1);
 				setMenuLeftIconColor(menuLeftIconPrefs, 0);
-				pointerMenuLeft.setColorFilter(prefs.getPointerMenuLeftColor(), PorterDuff.Mode.MULTIPLY);
-				separatorMenuLeftRight.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				separatorMenuLeftRightII.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				while (!getAppsCommunicator.getHasFinished()) {
+				pointerMenuLeft.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerMenuLeftColor")), PorterDuff.Mode.MULTIPLY);
+				separatorMenuLeftRight.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				separatorMenuLeftRightII.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				while (!gAC.getHasFinished()) {
 				}
-				inflateMenuRight(R.layout.menu_right_item, getAppsCommunicator.getApps());
+				firstLevelList = new ArrayList();
+				firstLevelList.addAll(folders);
+				firstLevelList.addAll(gAC.getApps());
+				inflateMenuRight(firstLevelList);
 				animateMainElements();
 				break;
 			case 51:
 				secondLevelList = new ArrayList<String>();
-				secondLevelList.add("Launch " + getAppsCommunicator.getApps().get(lastClickPosition).getAppName());
-				secondLevelList.add("Uninstall " + getAppsCommunicator.getApps().get(lastClickPosition).getAppName());
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				secondLevelList.add("Launch " + ((AppInfo) firstLevelList.get(lastClickPosition)).getAppName());
+				secondLevelList.add("Uninstall " + ((AppInfo) firstLevelList.get(lastClickPosition)).getAppName());
+				secondLevelList.add("Add " + ((AppInfo) firstLevelList.get(lastClickPosition)).getAppName() + " to New Folder");
+				for (int i = 0; i < folders.size(); i++) {
+					secondLevelList.add("Add " + ((AppInfo) firstLevelList.get(lastClickPosition)).getAppName() + " to " + folders.get(i).getFolderName());
+				}
+				inflateMenuRight(secondLevelList);
+				animateMainElements();
+				break;
+			case 511:
+				secondLevelList = new ArrayList<String>();
+				secondLevelList.add("New Folder");
+				secondLevelList.add("Create New Folder");
+				secondLevelList.add("Nevermind");
+				inflateMenuRight(secondLevelList);
+				animateMainElements();
+				break;
+			case 52:
+				for (int i = 0; i < folders.get(lastClickPosition).getFolderContents().size(); i++) {
+					try {
+						packageManager.getPackageInfo(folders.get(lastClickPosition).getFolderContents().get(i).getPackageName(), 0);
+					}
+					catch (Exception e) {
+						folders.get(lastClickPosition).getFolderContents().remove(i);
+					}
+				}
+				saveFolders();
+				inflateMenuRight(folders.get(lastClickPosition).getFolderContents());
+				animateMainElements();
+				break;
+			case 521:
+				secondLevelList = new ArrayList<String>();
+				secondLevelList.add("Launch " + folders.get(lastClickPosition).getFolderContents().get(lastClickPositionII).getAppName());
+				secondLevelList.add("Uninstall " + folders.get(lastClickPosition).getFolderContents().get(lastClickPositionII).getAppName());
+				secondLevelList.add("Remove " + folders.get(lastClickPosition).getFolderContents().get(lastClickPositionII).getAppName());
+				inflateMenuRight(secondLevelList);
+				animateMainElements();
+				break;
+			case 53:
+				secondLevelList = new ArrayList<String>();
+				secondLevelList.add("Rename " + folders.get(lastClickPosition).getFolderName());
+				secondLevelList.add("Delete " + folders.get(lastClickPosition).getFolderName());
+				inflateMenuRight(secondLevelList);
+				animateMainElements();
+				break;
+			case 531:
+				secondLevelList = new ArrayList<String>();
+				secondLevelList.add(folders.get(lastClickPosition).getFolderName());
+				secondLevelList.add("Rename " + folders.get(lastClickPosition).getFolderName());
+				secondLevelList.add("Nevermind");
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 			case 6:
@@ -756,50 +1058,54 @@ public class MainActivity extends Activity {
 				setMenuLeftIconColor(menuLeftIconMessaging, 0);
 				setMenuLeftIconColor(menuLeftIconApps, 0);
 				setMenuLeftIconColor(menuLeftIconPrefs, 1);
-				pointerMenuLeft.setColorFilter(prefs.getPointerMenuLeftColor(), PorterDuff.Mode.MULTIPLY);
-				separatorMenuLeftRight.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				separatorMenuLeftRightII.setBackgroundColor(prefs.getSeparatorMenuLeftRightColor());
-				ArrayList<String> prefsList = new ArrayList<String>();
-				prefsList.add("Epoch Launcher 1.0");
-				prefsList.add("Licensing");
+				pointerMenuLeft.setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("pointerMenuLeftColor")), PorterDuff.Mode.MULTIPLY);
+				separatorMenuLeftRight.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				separatorMenuLeftRightII.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(1).get(TAL("separatorMenuLeftRightColor")));
+				firstLevelList = new ArrayList<String>();
+				try {
+					firstLevelList.add("Epoch Launcher " + packageManager.getPackageInfo("com.mirasmithy.epochlauncher", 0).versionName);
+				}
+				catch (Exception e) {
+				}
 				if (hwSupportsWifi) {
-					prefsList.add("Wi-Fi");
+					firstLevelList.add("Wi-Fi");
 				}
 				else {
-					prefsList.add("Wi-Fi Unsupported");
+					firstLevelList.add("Wi-Fi Unsupported");
 				}
 				if (hwSupportsBt) {
-					prefsList.add("Bluetooth");
+					firstLevelList.add("Bluetooth");
 				}
 				else {
-					prefsList.add("Bluetooth Unsupported");
+					firstLevelList.add("Bluetooth Unsupported");
 				}
 				if (hwSupportsGps) {
-					prefsList.add("GPS");
+					firstLevelList.add("GPS");
 				}
 				else {
-					prefsList.add("GPS Unsupported");
+					firstLevelList.add("GPS Unsupported");
 				}
 				if (dispSupportsPrefsOrientation) {
-					switch (prefs.getDispPrefsOrientation()) {
+					switch (gPC.getDispPrefsOrientation()) {
 						case 0:
-							prefsList.add("Orientation Unlocked");
+							firstLevelList.add("Orientation Unlocked");
 							break;
 						case 1:
-							prefsList.add("Orientation Locked to Portrait");
+							firstLevelList.add("Orientation Locked to Portrait");
 							break;
 						case 2:
-							prefsList.add("Orientation Locked to Landscape");
+							firstLevelList.add("Orientation Locked to Landscape");
 							break;
 					}
 				}
 				else {
-					prefsList.add("Orientation Lock Unsupported");
+					firstLevelList.add("Orientation Lock Unsupported");
 				}
-				prefsList.add("Change Theme");
-				prefsList.add("Restart Epoch Launcher");
-				prefsList.add("Clear Launcher Defaults");
-				inflateMenuRight(R.layout.menu_right_item, prefsList);
+				firstLevelList.add("Theme Settings");
+				firstLevelList.add("Font Settings");
+				firstLevelList.add("Restart Epoch Launcher");
+				firstLevelList.add("Clear Launcher Defaults");
+				inflateMenuRight(firstLevelList);
 				animateMainElements();
 				break;
 			case 61:
@@ -809,7 +1115,7 @@ public class MainActivity extends Activity {
 				secondLevelList.add("Akashi");
 				secondLevelList.add("Roboto");
 				secondLevelList.add("android-support-v4.jar");
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 			case 62:
@@ -817,78 +1123,171 @@ public class MainActivity extends Activity {
 				secondLevelList.add("Unlock Orientation");
 				secondLevelList.add("Lock Orientation to Portrait");
 				secondLevelList.add("Lock Orientation to Landscape");
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 			case 63:
+				inflateMenuRight(gPC.getThemes());
+				animateMainElements();
+				break;
+			case 64:
 				secondLevelList = new ArrayList<String>();
-				secondLevelList.add("Light Theme");
-				secondLevelList.add("Dark Theme");
-				inflateMenuRight(R.layout.menu_right_item, secondLevelList);
+				secondLevelList.add("Use Custom Font");
+				secondLevelList.add(gPC.getCustomFont());
+				secondLevelList.add("Save Font Settings");
+				secondLevelList.add("Nevermind");
+				inflateMenuRight(secondLevelList);
 				animateMainElements();
 				break;
 		}
 	}
 
-	public void setMenuLeftIconColor(View b, int mode) {
-		((ImageView) ((RelativeLayout) b).getChildAt(0)).setColorFilter(prefs.getMenuLeftPlateColor(), PorterDuff.Mode.MULTIPLY);
-		if (mode == 0) {
-			((ImageView) ((RelativeLayout) b).getChildAt(1)).setColorFilter(prefs.getMenuLeftSpaghettiColorPassive(), PorterDuff.Mode.MULTIPLY);
-			((ImageView) ((RelativeLayout) b).getChildAt(2)).setColorFilter(prefs.getMenuLeftSauceColorPassive(), PorterDuff.Mode.MULTIPLY);
-		}
-		else {
-			((ImageView) ((RelativeLayout) b).getChildAt(1)).setColorFilter(prefs.getMenuLeftSpaghettiColorActive(), PorterDuff.Mode.MULTIPLY);
-			((ImageView) ((RelativeLayout) b).getChildAt(2)).setColorFilter(prefs.getMenuLeftSauceColorActive(), PorterDuff.Mode.MULTIPLY);
-		}
+	public void setMenuLeftIconColor(View view, int mode) {
+		((ImageView) ((RelativeLayout) view).getChildAt(mode)).setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuLeftPlateColor")), PorterDuff.Mode.MULTIPLY);
+		((ImageView) ((RelativeLayout) view).getChildAt(1)).setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuLeftSpaghettiColor")), PorterDuff.Mode.MULTIPLY);
+		((ImageView) ((RelativeLayout) view).getChildAt(2)).setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuLeftSauceColor")), PorterDuff.Mode.MULTIPLY);
 	}
 
-	public void setMenuRightItemColor(View c, int mode) {
-		if (mode == 0) {
-			c.setBackgroundColor(prefs.getMenuRightPlateColorPassive());
-			((ImageView) ((RelativeLayout) c).getChildAt(0)).setColorFilter(prefs.getMenuRightSpaghettiColorPassive());
-			((ImageView) ((RelativeLayout) c).getChildAt(1)).setColorFilter(prefs.getMenuRightSauceColorPassive());
-			((TextView) ((RelativeLayout) c).getChildAt(2)).setTextColor(prefs.getMenuRightTextColorPassive());
-			if (((RelativeLayout) c).getChildCount() == 4) {
-				((TextView) ((RelativeLayout) c).getChildAt(3)).setTextColor(prefs.getMenuRightTextColorPassive());
-			}
+	public void setMenuRightItemColor(View view, int mode, boolean usingCustomIcon) {
+		view.setBackgroundColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuRightPlateColor")));
+		if (usingCustomIcon) {
+			((ImageView) ((RelativeLayout) view).getChildAt(0)).setColorFilter(Color.argb(0, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
 		}
 		else {
-			c.setBackgroundColor(prefs.getMenuRightPlateColorActive());
-			((ImageView) ((RelativeLayout) c).getChildAt(0)).setColorFilter(prefs.getMenuRightSpaghettiColorActive());
-			((ImageView) ((RelativeLayout) c).getChildAt(1)).setColorFilter(prefs.getMenuRightSauceColorActive());
-			((TextView) ((RelativeLayout) c).getChildAt(2)).setTextColor(prefs.getMenuRightTextColorActive());
-			if (((RelativeLayout) c).getChildCount() == 4) {
-				((TextView) ((RelativeLayout) c).getChildAt(3)).setTextColor(prefs.getMenuRightTextColorActive());
-			}
+			((ImageView) ((RelativeLayout) view).getChildAt(0)).setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuRightSpaghettiColor")), PorterDuff.Mode.MULTIPLY);
+			((ImageView) ((RelativeLayout) view).getChildAt(1)).setColorFilter(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuRightSauceColor")), PorterDuff.Mode.MULTIPLY);
+		}
+		if (((RelativeLayout) view).getChildAt(2).getClass() == TextView.class) {
+			((TextView) ((RelativeLayout) view).getChildAt(2)).setTextColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuRightTextColor")));
+		}
+		else {
+			((EditText) ((RelativeLayout) view).getChildAt(2)).setTextColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuRightTextColor")));
+		}
+		if (((RelativeLayout) view).getChildCount() == 4) {
+			((TextView) ((RelativeLayout) view).getChildAt(3)).setTextColor(gPC.getThemes().get(gPC.getAppTheme()).getColors(mode).get(TAL("menuRightTextColor")));
 		}
 	}
 
 	public void setMenuLeftPointerMenuLeftLayoutParams() {
 		if (!dispSupportsPrefsOrientation) {
 			RelativeLayout.LayoutParams menuLeftLayoutParams = (RelativeLayout.LayoutParams) menuLeft.getLayoutParams();
-			RelativeLayout.LayoutParams pointerMenuLeftLayoutParams = (RelativeLayout.LayoutParams) pointerMenuLeft.getLayoutParams();
 			if (appMode == 0) {
 				menuLeftLayoutParams.leftMargin = ((int) (20 * dispDensity));
-				pointerMenuLeftLayoutParams.leftMargin = 0;
 			}
 			else {
 				menuLeftLayoutParams.leftMargin = -(menuLeft.getWidth() + pointerMenuLeft.getWidth());
-				pointerMenuLeftLayoutParams.leftMargin = -pointerMenuLeft.getWidth();
 			}
 			menuLeft.setLayoutParams(menuLeftLayoutParams);
-			pointerMenuLeft.setLayoutParams(pointerMenuLeftLayoutParams);
 		}
+		RelativeLayout.LayoutParams pointerMenuLeftLayoutParams = (RelativeLayout.LayoutParams) pointerMenuLeft.getLayoutParams();
+		if (appMode == 0) {
+			pointerMenuLeftLayoutParams.leftMargin = 0;
+		}
+		else {
+			pointerMenuLeftLayoutParams.topMargin = ((int) ((menuLeftIconHeight + (20 * dispDensity)) * Integer.parseInt(String.valueOf(appMode).substring(0, 1)) - (pointerMenuLeftHeight + ((menuLeftIconHeight - pointerMenuLeftHeight) / 2))));
+			if (!dispSupportsPrefsOrientation) {
+				pointerMenuLeftLayoutParams.leftMargin = -pointerMenuLeft.getWidth();
+			}
+		}
+		pointerMenuLeft.setLayoutParams(pointerMenuLeftLayoutParams);
 	}
 
-	public void setPointerMenuLeftLayoutParams() {
-		RelativeLayout.LayoutParams pointerMenuLeftLayoutParams = (RelativeLayout.LayoutParams) pointerMenuLeft.getLayoutParams();
-		pointerMenuLeftLayoutParams.topMargin = (int) ((menuLeftIconHeight + (20 * dispDensity)) * Integer.parseInt(String.valueOf(appMode).substring(0, 1)) - (pointerMenuLeftHeight + ((menuLeftIconHeight - pointerMenuLeftHeight) / 2)));
-		pointerMenuLeft.setLayoutParams(pointerMenuLeftLayoutParams);
+	public void savePrefs() {
+		FileOutputStream savePrefsFos;
+		ObjectOutputStream savePrefsOos;
+		try {
+			savePrefsFos = context.getApplicationContext().openFileOutput("dispPrefsOrientation", context.MODE_PRIVATE);
+			savePrefsOos = new ObjectOutputStream(savePrefsFos);
+			savePrefsOos.writeObject(gPC.getDispPrefsOrientation());
+			savePrefsOos.close();
+			savePrefsFos.close();
+		}
+		catch (Exception e) {
+			onCrash();
+		}
+		try {
+			savePrefsFos = context.getApplicationContext().openFileOutput("appTheme", context.MODE_PRIVATE);
+			savePrefsOos = new ObjectOutputStream(savePrefsFos);
+			savePrefsOos.writeObject(gPC.getAppTheme());
+			savePrefsOos.close();
+			savePrefsFos.close();
+		}
+		catch (Exception e) {
+			onCrash();
+		}
+		try {
+			Collections.sort(gPC.getThemes(), new ThemeComparator());
+			savePrefsFos = context.getApplicationContext().openFileOutput("themes", context.MODE_PRIVATE);
+			savePrefsOos = new ObjectOutputStream(savePrefsFos);
+			savePrefsOos.writeObject(gPC.getThemes());
+			savePrefsOos.close();
+			savePrefsFos.close();
+		}
+		catch (Exception e) {
+			onCrash();
+		}
+		try {
+			savePrefsFos = context.getApplicationContext().openFileOutput("useCustomFont", context.MODE_PRIVATE);
+			savePrefsOos = new ObjectOutputStream(savePrefsFos);
+			savePrefsOos.writeObject(gPC.getUseCustomFont());
+			savePrefsOos.close();
+			savePrefsFos.close();
+		}
+		catch (Exception e) {
+			onCrash();
+		}
+		try {
+			savePrefsFos = context.getApplicationContext().openFileOutput("customFont", context.MODE_PRIVATE);
+			savePrefsOos = new ObjectOutputStream(savePrefsFos);
+			savePrefsOos.writeObject(gPC.getCustomFont());
+			savePrefsOos.close();
+			savePrefsFos.close();
+		}
+		catch (Exception e) {
+			onCrash();
+		}
 	}
 
 	public void setWallpaperParams() {
 		WallpaperManager wallpaperManager = WallpaperManager.getInstance(context);
 		wallpaperManager.suggestDesiredDimensions(dispResX, dispResY);
+	}
+
+	public int TAL(String mode) { //ThemeAbstractionLayer
+		int returnValue = 0;
+		switch (mode) {
+			case "menuLeftPlateColor":
+				returnValue = 0;
+				break;
+			case "menuLeftSpaghettiColor":
+				returnValue = 1;
+				break;
+			case "menuLeftSauceColor":
+				returnValue = 2;
+				break;
+			case "pointerMenuLeftColor":
+				returnValue = 3;
+				break;
+			case "separatorMenuLeftRightColor":
+				returnValue = 4;
+				break;
+			case "menuRightPlateColor":
+				returnValue = 5;
+				break;
+			case "menuRightSpaghettiColor":
+				returnValue = 6;
+				break;
+			case "menuRightSauceColor":
+				returnValue = 7;
+				break;
+			case "menuRightTextColor":
+				returnValue = 8;
+				break;
+			case "pointerUpDownColor":
+				returnValue = 9;
+				break;
+		}
+		return returnValue;
 	}
 
 	public void uninstall(String packageName) {
@@ -897,6 +1296,11 @@ public class MainActivity extends Activity {
 		}
 		catch (Exception e) {
 		}
+	}
+
+	@Override  
+	public void onBackPressed() {
+		setAppMode(appMode / 10);
 	}
 
 	@Override
@@ -910,18 +1314,6 @@ public class MainActivity extends Activity {
 	public void onWindowFocusChanged(boolean hasFocus) {
 		if (hasFocus) {
 			setAppMode(0);
-		}
-	}
-
-	@Override  
-	public void onBackPressed() {
-		switch (String.valueOf(appMode).length()) {
-			case 1:
-				setAppMode(0);
-				break;
-			case 2:
-				setAppMode(Integer.parseInt(String.valueOf(appMode).substring(0, 1)));
-				break;
 		}
 	}
 }

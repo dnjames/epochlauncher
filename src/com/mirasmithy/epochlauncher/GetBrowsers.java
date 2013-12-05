@@ -7,8 +7,8 @@ import java.util.*;
 
 public class GetBrowsers implements Runnable {
 	public void run() {
-		GetBrowsersCommunicator getBrowsersCommunicator = new GetBrowsersCommunicator();
-		PackageManager packageManager = getBrowsersCommunicator.getPackageManager();
+		GetBrowsersCommunicator gBC = new GetBrowsersCommunicator();
+		PackageManager packageManager = gBC.getPackageManager();
 		ArrayList<AppInfo> browsers = new ArrayList<AppInfo>();
 		Intent getBrowsersIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com/"));
 		List<ResolveInfo> getBrowsersList = packageManager.queryIntentActivities(getBrowsersIntent, PackageManager.MATCH_DEFAULT_ONLY);
@@ -18,12 +18,12 @@ public class GetBrowsers implements Runnable {
 		}
 		if (browsers.size() == 0) {
 			browsers.add(new AppInfo());
-			browsers.get(0).setAppInfo("No Browsers Installed", "");
+			browsers.get(0).setAppInfo("No Browsers Installed", null);
 		}
 		HashSet<AppInfo> a = new HashSet<AppInfo>(browsers);
 		browsers = new ArrayList<AppInfo>(a);
 		Collections.sort(browsers, new AppInfoComparator());
-		getBrowsersCommunicator.setBrowsers(browsers);
-		getBrowsersCommunicator.setHasFinished(true);
+		gBC.setBrowsers(browsers);
+		gBC.setHasFinished(true);
 	}
 }

@@ -6,8 +6,8 @@ import java.util.*;
 
 public class GetPhoneApps implements Runnable {
 	public void run() {
-		GetPhoneAppsCommunicator getPhoneAppsCommunicator = new GetPhoneAppsCommunicator();
-		PackageManager packageManager = getPhoneAppsCommunicator.getPackageManager();
+		GetPhoneAppsCommunicator gPAC = new GetPhoneAppsCommunicator();
+		PackageManager packageManager = gPAC.getPackageManager();
 		ArrayList<AppInfo> phoneApps = new ArrayList<AppInfo>();
 		Intent getPhoneAppsIntent = new Intent(Intent.ACTION_DIAL, null);
 		List<ResolveInfo> getPhoneAppsList = packageManager.queryIntentActivities(getPhoneAppsIntent, PackageManager.MATCH_DEFAULT_ONLY);
@@ -17,12 +17,12 @@ public class GetPhoneApps implements Runnable {
 		}
 		if (phoneApps.size() == 0) {
 			phoneApps.add(new AppInfo());
-			phoneApps.get(0).setAppInfo("No Phone Applications Installed", "");
+			phoneApps.get(0).setAppInfo("No Phone Applications Installed", null);
 		}
 		HashSet<AppInfo> a = new HashSet<AppInfo>(phoneApps);
 		phoneApps = new ArrayList<AppInfo>(a);
 		Collections.sort(phoneApps, new AppInfoComparator());
-		getPhoneAppsCommunicator.setPhoneApps(phoneApps);
-		getPhoneAppsCommunicator.setHasFinished(true);
+		gPAC.setPhoneApps(phoneApps);
+		gPAC.setHasFinished(true);
 	}
 }

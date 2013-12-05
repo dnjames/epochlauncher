@@ -1,6 +1,8 @@
 package com.mirasmithy.epochlauncher;
 
-public class AppInfo {
+import java.io.*;
+
+public class AppInfo implements Serializable {
 	private String appName;
 	private String packageName;
 

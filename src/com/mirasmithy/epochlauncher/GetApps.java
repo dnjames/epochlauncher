@@ -6,8 +6,8 @@ import java.util.*;
 
 public class GetApps implements Runnable {
 	public void run() {
-		GetAppsCommunicator getAppsCommunicator = new GetAppsCommunicator();
-		PackageManager packageManager = getAppsCommunicator.getPackageManager();
+		GetAppsCommunicator gAC = new GetAppsCommunicator();
+		PackageManager packageManager = gAC.getPackageManager();
 		ArrayList<AppInfo> apps = new ArrayList<AppInfo>();
 		Intent getAppsIntent = new Intent(Intent.ACTION_MAIN, null);
 		getAppsIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -19,7 +19,7 @@ public class GetApps implements Runnable {
 		HashSet<AppInfo> a = new HashSet<AppInfo>(apps);
 		apps = new ArrayList<AppInfo>(a);
 		Collections.sort(apps, new AppInfoComparator());
-		getAppsCommunicator.setApps(apps);
-		getAppsCommunicator.setHasFinished(true);
+		gAC.setApps(apps);
+		gAC.setHasFinished(true);
 	}
 }
